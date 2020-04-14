@@ -118,15 +118,17 @@ def sh():
 
     G = nx.Graph()
     edge_list = []
-    for i in range(50):
-        edge = (random.randint(0, 25), random.randint(0, 25), random.randint(0,100))
+    for i in range(250):
+        edge = (random.randint(0, 99), random.randint(0, 99), random.randint(1, 99))
         edge_list.append(edge)
     G.add_weighted_edges_from(edge_list)
-    nx.draw(G)
-    plt.show()
+    # nx.draw(G)
+    # plt.show()
 
     return G
 
-sh()
-path = "/"
-write_input_file(G, )
+path = "in-files/100.in"
+# write_input_file(sh(), path)
+G = read_input_file(path)
+nx.draw(G)
+plt.show()

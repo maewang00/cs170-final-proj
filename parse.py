@@ -2,8 +2,11 @@ import re
 import os
 
 import networkx as nx
+import matplotlib.pyplot as plt
 
 import utils
+
+import random
 
 
 def validate_file(path):
@@ -110,3 +113,20 @@ def write_output_file(T, path):
         lines = nx.generate_edgelist(T, data=False)
         fo.writelines("\n".join(lines))
         fo.close()
+
+def sh():
+
+    G = nx.Graph()
+    edge_list = []
+    for i in range(50):
+        edge = (random.randint(0, 25), random.randint(0, 25), random.randint(0,100))
+        edge_list.append(edge)
+    G.add_weighted_edges_from(edge_list)
+    nx.draw(G)
+    plt.show()
+
+    return G
+
+sh()
+path = "/"
+write_input_file(G, )

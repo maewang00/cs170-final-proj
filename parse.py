@@ -2,6 +2,7 @@ import re
 import os
 
 import networkx as nx
+import matplotlib.pyplot as plt
 
 import utils
 
@@ -110,3 +111,13 @@ def write_output_file(T, path):
         lines = nx.generate_edgelist(T, data=False)
         fo.writelines("\n".join(lines))
         fo.close()
+
+
+
+def sh():
+
+    G = nx.Graph()
+    G.add_edges_from([(1 ,2) , (2 ,3) , (1 ,3) , (1 ,4) ])
+    nx.draw(G)
+    plt.show()
+sh()

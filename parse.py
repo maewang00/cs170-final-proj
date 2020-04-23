@@ -127,8 +127,8 @@ def sh():
 
     return G
 
-path = "in-files/100.in"
+# path = "inputs/medium-111.in"
 # write_input_file(sh(), path)
-G = read_input_file(path)
-nx.draw(G)
-plt.show()
+# G = read_input_file(path)
+# nx.draw(G)
+# plt.show()

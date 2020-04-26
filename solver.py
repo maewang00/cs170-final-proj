@@ -17,14 +17,14 @@ def solve(G):
         heappush(pq, (-G.edges[e]['weight'], e))
     
     T = copy.deepcopy(G)
-    print(T == G)
-    print(type(T))
+    # print(T == G)
+    # print(type(T))
     costpq = []
-    
+    cost = float('inf')
     while pq:
         node = heappop(pq)
         e = node[1]
-        print(e)
+        # print(e)
         w = node[0]
         T.remove_edge(e[0], e[1])
         if T.degree(e[1]) == 0:
@@ -33,17 +33,17 @@ def solve(G):
             T.remove_node(e[0])
         # print("CONNECT")
         # print()
-        if nx.is_connected(T) and nx.is_dominating_set(G, T):
-            print("SDFSDF")
+        if nx.is_connected(T) and nx.is_dominating_set(G, T.nodes):
+            # print("SDFSDF")
             if nx.is_tree(T):
                 heappush(costpq, (average_pairwise_distance_fast(T), T))
                 cost = average_pairwise_distance_fast(T)
         else:
-            T.add_edge(e[0], e[1], weight=w)
+            T.add_edge(e[0], e[1], weight=w*-1)
     # return 0
     return heappop(costpq)[0]
 
-gr = read_input_file('inputs/small-41.in')
+gr = read_input_file('inputs/large-300.in')
 print(solve(gr))
         
     # print(list(G.edges))

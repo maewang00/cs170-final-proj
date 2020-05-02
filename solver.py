@@ -17,7 +17,7 @@ def solve(G):
         heappush(pq, (-G.edges[e]['weight'], e))
     
     T = copy.deepcopy(G)
-    print(T == G)
+    # print(T == G)
     print(type(T))
     costpq = []
     
@@ -41,10 +41,13 @@ def solve(G):
         else:
             T.add_edge(e[0], e[1], weight=w)
     # return 0
-    return heappop(costpq)[0]
+    return heappop(costpq)[1]
+    
 
-gr = read_input_file('inputs/small-41.in')
-print(solve(gr))
+# gr = read_input_file('inputs/small-4.in')
+# s = solve(gr)
+# print(average_pairwise_distance_fast(s))
+# print(is_valid_network(gr,s))
         
     # print(list(G.edges))
     # print(nx.is_dominating_set(G, G.nodes))

@@ -1,5 +1,5 @@
 import networkx as nx
-from parse import read_input_file, write_output_file
+from parse import read_input_file, write_output_file, validate_file
 from utils import is_valid_network, average_pairwise_distance_fast
 import sys
 from heapq import heappush, heappop
@@ -43,6 +43,8 @@ def solve(G):
     costpq = []
     
     while pq:
+        if (T.number_of_nodes() == 2):
+            break
         node = heappop(pq)
         e = node[1]
         # print(e)
@@ -71,7 +73,7 @@ def is_spanning(G, node):
 def makeAllOutputFiles():
     for file in os.listdir("inputs"):
         if file.endswith(".in"):
-            print(os.path.join("inputs", file)) #input file
+            #print(os.path.join("inputs", file)) #input file
             input_path = os.path.join("inputs", file)
             G = read_input_file(input_path)
             T = solve(G)
@@ -79,11 +81,20 @@ def makeAllOutputFiles():
             print("Average pairwise distance: {}".format(average_pairwise_distance_fast(T)))
             outname = os.path.splitext(file)[0]+'.out'
             output_path = os.path.join("outputs", outname)
-            print(output_path + "\n")
-            #write_output_file(T, output_path)
+            #print(output_path + "\n")
+            write_output_file(T, output_path)
 
 
-makeAllOutputFiles()
+def validateAllFiles():
+    for file in os.listdir("outputs"):
+        output_path = os.path.join("outputs", file)
+        validate_file(output_path)
+        #print(output_path + " validated.")
+
+
+#makeAllOutputFiles()
+#validateAllFiles()
+
 # gr = read_input_file('inputs/small-4.in')
 # s = solve(gr)
 # print(average_pairwise_distance_fast(s))

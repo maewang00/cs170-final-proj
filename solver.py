@@ -45,8 +45,9 @@ def solve(G):
     T = copy.deepcopy(G)
     costpq = [] #min heap with minimal pairwise distance with its tree
     MST = nx.minimum_spanning_tree(G)
-    for n in MST.nodes:
-        if MST.degree(n) == 1:
+    MST_copy = copy.deepcopy(MST)
+    for n in MST_copy.nodes:
+        if MST_copy.degree(n) == 1:
             MST.remove_node(n)
     # heappush(costpq, (average_pairwise_distance_fast(MST), MST))
     
@@ -113,7 +114,7 @@ def makeAllOutputFiles():
             G = read_input_file(input_path)
             T = solve(G)
             assert is_valid_network(G, T)
-            print("Average pairwise distance: {}".format(average_pairwise_distance_fast(T)))
+            # print("Average pairwise distance: {}".format(average_pairwise_distance_fast(T)))
             outname = os.path.splitext(file)[0]+'.out'
             output_path = os.path.join("outputs", outname)
             print(output_path + "\n")

@@ -45,7 +45,10 @@ def solve(G):
     T = copy.deepcopy(G)
     costpq = [] #min heap with minimal pairwise distance with its tree
     MST = nx.minimum_spanning_tree(G)
-    heappush(costpq, (average_pairwise_distance_fast(MST), MST))
+    for n in MST.nodes:
+        if MST.degree(n) == 1:
+            MST.remove_node(n)
+    # heappush(costpq, (average_pairwise_distance_fast(MST), MST))
     
     while pq:
         if (T.number_of_nodes() == 2):
@@ -92,8 +95,11 @@ def solve(G):
     #         else:
     #             _T.add_edge(e[0], e[1], weight=w)
     #     iterations -= 1
-
-    return heappop(costpq)[1]
+    result = heappop(costpq)[1]
+    if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
+        return result
+    else:
+        return MST
     
 
 def is_spanning(G, node):

@@ -14,11 +14,24 @@ def solve(G):
         T: networkx.Graph
     """
 
+    #For input graphs of 2 vertices and an edge between them
     if G.number_of_nodes() == 2:
         print("HI")
         e = G.edges[list(G.edges)[0]]['weight'] #list(G.edges)[0]
         G.edges[list(G.edges)[0]]['weight'] = 0.000
         return G
+
+    #For input graphs where 1 vertex spans all other vertices
+    spanner_nodes = [node for node in G if is_spanning(G, node)]
+    print(spanner_nodes)
+    if (len(spanner_nodes) > 0):
+        print("YO")
+        T = nx.Graph()
+        if (spanner_nodes[0] == 1):
+            T.add_weighted_edges_from([(spanner_nodes[0],2,0)])
+        else:
+            T.add_weighted_edges_from([(spanner_nodes[0],1,0)])
+        return T
 
     pq = []
     for e in G.edges:
@@ -51,6 +64,10 @@ def solve(G):
     # return 0
     return heappop(costpq)[1]
     
+
+def is_spanning(G, node):
+    return (G.degree(node) >= (G.number_of_nodes() - 1))
+
 def makeAllOutputFiles():
     for file in os.listdir("inputs"):
         if file.endswith(".in"):

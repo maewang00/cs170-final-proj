@@ -58,11 +58,7 @@ def solve(G):
         if campos_copy.degree(n) == 1:
             campos_mst.remove_node(n)
 
-    bftree = maes_dumbass_brute_force(G)
-    # bftree_copy = copy.deepcopy(bftree)
-    # for n in bftree_copy.nodes:
-    #     if bftree_copy.degree(n) == 1:
-    #         bftree.remove_node(n)
+    bftree = maes_dumb_brute_force(G)
     
     while pq:
         if (T.number_of_nodes() == 2):
@@ -82,22 +78,26 @@ def solve(G):
                 # cost = average_pairwise_distance_fast(T)
         else:
             T.add_edge(e[0], e[1], weight=w)
+
     result = heappop(costpq)[1]
-    brute_force = maes_dumbass_brute_force(G)
+    #brute_force = maes_dumb_brute_force(G)
 
     if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
         if average_pairwise_distance_fast(campos_mst) <= average_pairwise_distance_fast(result):
             if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(campos_mst):
                 print("BRUTEFORCE")
                 return bftree
-            else: 
+            else:
+                print("CAMPOS") 
                 return campos_mst
         else: 
+            print("ORIGIN ALG") 
             return result
     else:
+        print("MST")
         return MST
 
-def maes_dumbass_brute_force(G): #;( uses dijkstra's
+def maes_dumb_brute_force(G): #;( uses dijkstra's
     #min heap with minimal pairwise distance with its tree
     costpq = []
     #list to keep track of all costs found so far
@@ -176,7 +176,7 @@ def campos_algorithm(G):
     return mst
     
 
-def maes_dumbass_brute_force(G): #;( uses dijkstra's
+def maes_dumb_brute_force(G): #;( uses dijkstra's
     #min heap with minimal pairwise distance with its tree
     costpq = []
     #list to keep track of all costs found so far
@@ -212,23 +212,6 @@ def maes_dumbass_brute_force(G): #;( uses dijkstra's
             mincosts.append(curr_cost)
 
     return heappop(costpq)[1]
-
-
-    
-
-#Trash code
-  #T = copy.deepcopy(G)
-  # original_vertices = G.number_of_nodes()
-  #make dummy node and connect to all other vertices with edge weights 0
-  # T.add_node(original_vertices)
-  # dummy_node_id = G.number_of_nodes()
-  # for node in range(0, original_vertices):
-  #     T.add_weighted_edges_from([(G.number_of_nodes(),node,0)])
-  #dictionary where: 
-  #key is target node from the dummy node
-  #value is list where index 0 is the dummy node and the last is the key (target node)
-  # shortest_path = nx.shortest_path(T, source = dummy_node_id)
-  #trim down leaf nodes form the shortest path tree
   
 
 #void function that updates costPQ
@@ -265,39 +248,79 @@ def small_graph_bruteforce_recursive(G, currG, costPQ):
         currG.add_edge(e0, e1, weight=w)
 
 
-
-
-#for small graphs only! Should find the solution indefinitely
-def maes_second_dumbass_brute_force(G):
+#for small graphs only! Should find the solution indefinitely 
+#[UPDATE: DO NOT USE]
+def maes_second_dumb_brute_force(G):
     pqcost = []
     small_graph_bruteforce_recursive(G, G, pqcost)
     return heappop(pqcost)[1]
+
+#G is original graph, T is the tree from what we found from our first algorithm
+def maes_randomization_alg(G, T):
+    pq = [] #min heap for Kruskals edge popping
+    for e in G.edges:
+        heappush(pq, (-G.edges[e]['weight'], e))
+    T = copy.deepcopy(G)
+    costpq = [] #min heap with minimal pairwise distance with its tree
+
+    MST = nx.minimum_spanning_tree(G)
+    MST_copy = copy.deepcopy(MST)
+    for n in MST_copy.nodes:
+        if MST_copy.degree(n) == 1:
+            MST.remove_node(n)
+
+    campos_mst = campos_algorithm(G)
+    campos_copy = copy.deepcopy(campos_mst)
+    for n in campos_copy.nodes:
+        if campos_copy.degree(n) == 1:
+            campos_mst.remove_node(n)
+
+    bftree = maes_dumb_brute_force(G)
+    
+    while pq:
+        if (T.number_of_nodes() == 2):
+            break
+        node = heappop(pq)
+        e = node[1]
+        # print(e)
+        w = node[0] * -1
+        T.remove_edge(e[0], e[1])
+        if T.degree(e[1]) == 0:
+            T.remove_node(e[1])
+        if T.degree(e[0]) == 0:
+            T.remove_node(e[0])
+        if nx.is_connected(T) and nx.is_dominating_set(G, T):
+            if nx.is_tree(T):
+                heappush(costpq, (average_pairwise_distance_fast(T), T))
+                # cost = average_pairwise_distance_fast(T)
+        else:
+            T.add_edge(e[0], e[1], weight=w)
+
+    result = heappop(costpq)[1]
+    #brute_force = maes_dumb_brute_force(G)
+
+    if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
+        if average_pairwise_distance_fast(campos_mst) <= average_pairwise_distance_fast(result):
+            if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(campos_mst):
+                print("BRUTEFORCE")
+                return bftree
+            else:
+                print("CAMPOS") 
+                return campos_mst
+        else: 
+            print("ORIGIN ALG") 
+            return result
+    else:
+        print("MST")
+        return MST
 
     
 
 
 
 
-    # while pq:
-    #     if (T.number_of_nodes() == 2):
-    #         break
-    #     node = heappop(pq)
-    #     e = node[1]
-    #     # print(e)
-    #     w = node[0] * -1
-    #     T.remove_edge(e[0], e[1])
-    #     if T.degree(e[1]) == 0:
-    #         T.remove_node(e[1])
-    #     if T.degree(e[0]) == 0:
-    #         T.remove_node(e[0])
-    #     if nx.is_connected(T) and nx.is_dominating_set(G, T):
-    #         if nx.is_tree(T):
-    #             heappush(costpq, (average_pairwise_distance_fast(T), T))
-    #             # cost = average_pairwise_distance_fast(T)
-    #     else:
-    #         T.add_edge(e[0], e[1], weight=w)
-    # result = heappop(costpq)[1]
-    # brute_force = maes_dumbass_brute_force(G)
+
+
 
 
 
@@ -321,16 +344,21 @@ def makeAllOutputFiles():
             T = solve(G)
             assert is_valid_network(G, T)
 
-            #use brute force for small graphs
-            if file.startswith("small") and len(T) > 2:
-                print("Trying brute forcing on SMALL file: " + os.path.join("inputs", file)) #input file
-                BRUTE_TREE = maes_second_dumbass_brute_force(G)
+            #randomization optimization
+            if len(T) > 2:
+                print("Trying randomization to find better result..")
+                betterT = maes_randomization_alg(G, T)
+                assert is_valid_network(G, betterT)
+
                 if average_pairwise_distance_fast(BRUTE_TREE) <= average_pairwise_distance_fast(T):
-                    print("Small brute-force alg WINS.")
-                    T = BRUTE_TREE
+                    print("BETTER TREE FOUND.")
+                    T = betterT
                 else:
-                    print("Solver alg WINS.")
+                    print("No improvements.")
                     #nothing happens
+
+
+
 
             #print("Average pairwise distance: {}".format(average_pairwise_distance_fast(T)))
             outname = os.path.splitext(file)[0]+'.out'
@@ -347,19 +375,46 @@ def validateAllFiles():
         
 
 
-#makeAllOutputFiles()
+makeAllOutputFiles()
 
 
-gr = read_input_file('inputs/small-6.in')
-s = maes_second_dumbass_brute_force(gr)
-print(average_pairwise_distance_fast(s))
+
+
+
+
+# gr = read_input_file('inputs/small-6.in')
+# s = maes_second_dumb_brute_force(gr)
+# print(average_pairwise_distance_fast(s))
 #write_output_file(s, 'outputs/small-6.out')
-print(is_valid_network(gr,s))
+# print(is_valid_network(gr,s))
+
+
+
+
+
+
+
+#TRASH CODE
+# #use brute force for small graphs
+# if file.startswith("small") and len(T) > 2:
+#     print("Trying brute forcing on SMALL file: " + os.path.join("inputs", file)) #input file
+#     BRUTE_TREE = maes_second_dumb_brute_force(G)
+#     if average_pairwise_distance_fast(BRUTE_TREE) <= average_pairwise_distance_fast(T):
+#         print("Small brute-force alg WINS.")
+#         T = BRUTE_TREE
+#     else:
+#         print("Solver alg WINS.")
+#         #nothing happens
+
+
+
+
+
 
         
-    # print(list(G.edges))
-    # print(nx.is_dominating_set(G, G.nodes))
-    # print(average_pairwise_distance(G))
+# print(list(G.edges))
+# print(nx.is_dominating_set(G, G.nodes))
+# print(average_pairwise_distance(G))
 
 
 # Here's an example of how to run your solver.

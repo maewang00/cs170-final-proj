@@ -54,11 +54,11 @@ def solve(G):
         if MST_copy.degree(n) == 1:
             MST.remove_node(n)
 
-    campos_mst = campos_algorithm(G)
-    campos_copy = copy.deepcopy(campos_mst)
-    for n in campos_copy.nodes:
-        if campos_copy.degree(n) == 1:
-            campos_mst.remove_node(n)
+    # campos_mst = campos_algorithm(G)
+    # campos_copy = copy.deepcopy(campos_mst)
+    # for n in campos_copy.nodes:
+    #     if campos_copy.degree(n) == 1:
+    #         campos_mst.remove_node(n)
 
     bftree = maes_dumb_brute_force(G)
     
@@ -85,19 +85,30 @@ def solve(G):
     #brute_force = maes_dumb_brute_force(G)
 
     if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
-        if average_pairwise_distance_fast(campos_mst) <= average_pairwise_distance_fast(result):
-            if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(campos_mst):
-                print("BRUTEFORCE")
-                return bftree
-            else:
-                print("CAMPOS") 
-                return campos_mst
-        else: 
-            print("ORIGIN ALG") 
+        if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(result):
+            print("BRUTEFORCE")
+            return bftree
+        else:
+            print("ORIGIN ALG")
             return result
     else:
         print("MST")
         return MST
+
+    # if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
+    #     if average_pairwise_distance_fast(campos_mst) <= average_pairwise_distance_fast(result):
+    #         if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(campos_mst):
+    #             print("BRUTEFORCE")
+    #             return bftree
+    #         else:
+    #             print("CAMPOS") 
+    #             return campos_mst
+    #     else: 
+    #         print("ORIGIN ALG") 
+    #         return result
+    # else:
+    #     print("MST")
+    #     return MST
 
 def maes_dumb_brute_force(G): #;( uses dijkstra's
     #min heap with minimal pairwise distance with its tree
@@ -332,7 +343,7 @@ def makeAllOutputFiles():
                 betterT = maes_randomization_alg(G, T, 50) #100 iterations of randomness
                 assert is_valid_network(G, betterT)
 
-                if average_pairwise_distance_fast(betterT) <= average_pairwise_distance_fast(T):
+                if average_pairwise_distance_fast(betterT) < average_pairwise_distance_fast(T):
                     print("BETTER TREE FOUND.")
                     T = betterT
                 else:
@@ -346,7 +357,7 @@ def makeAllOutputFiles():
             outname = os.path.splitext(file)[0]+'.out'
             output_path = os.path.join("outputs", outname)
             print(output_path + "\n")
-            #write_output_file(T, output_path)
+            write_output_file(T, output_path)
             assert validate_file(output_path) == True
 
 def validateAllFiles():

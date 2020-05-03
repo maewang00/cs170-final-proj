@@ -69,33 +69,6 @@ def solve(G):
                 # cost = average_pairwise_distance_fast(T)
         else:
             T.add_edge(e[0], e[1], weight=w)
-
-    # #randomize version for 10 iterations
-    # iterations = 10
-    # while (iterations):
-    #     #random.shuffle(G.edges)
-    #     for e in G.edges:
-    #         heappush(pq, (-G.edges[e]['weight'], e))
-    #     _T = copy.deepcopy(G)
-
-    #     while pq:
-    #         if (_T.number_of_nodes() == 2):
-    #             break
-    #         edge = heappop(pq)
-    #         e = edge[1]
-    #         w = edge[0] * -1
-    #         _T.remove_edge(e[0], e[1])
-    #         if _T.degree(e[1]) == 0:
-    #             _T.remove_node(e[1])
-    #         if _T.degree(e[0]) == 0:
-    #             _T.remove_node(e[0])
-    #         if nx.is_connected(_T) and nx.is_dominating_set(G, _T):
-    #             if nx.is_tree(_T):
-    #                 heappush(costpq, (average_pairwise_distance_fast(_T), _T))
-    #                 # cost = average_pairwise_distance_fast(T)
-    #         else:
-    #             _T.add_edge(e[0], e[1], weight=w)
-    #     iterations -= 1
     result = heappop(costpq)[1]
     brute_force = maes_dumbass_brute_force(G)
 
@@ -153,10 +126,9 @@ def maes_dumbass_brute_force(G): #;( uses dijkstra's
     return heappop(costpq)[1]
 
 
+    
 
-
-
-
+#Trash code
   #T = copy.deepcopy(G)
   # original_vertices = G.number_of_nodes()
   #make dummy node and connect to all other vertices with edge weights 0
@@ -170,6 +142,81 @@ def maes_dumbass_brute_force(G): #;( uses dijkstra's
   # shortest_path = nx.shortest_path(T, source = dummy_node_id)
   #trim down leaf nodes form the shortest path tree
   
+
+#void function that updates costPQ
+def small_graph_bruteforce_recursive(G, currG, costPQ):
+    T = copy.deepcopy(currG)
+    #for all edges in the current graph
+    for e in T.edges:
+        #BASE CASE: continue or don't continue
+        if nx.is_connected(currG) and nx.is_dominating_set(G, currG):
+            if nx.is_tree(currG):
+                heappush(costPQ, (average_pairwise_distance_fast(currG), currG)) #records
+                print(costPQ[0])
+        else:
+            #the current graph is not connected or dominating
+            return
+
+        e0 = e[0]
+        e1 = e[1]
+        w = G.get_edge_data(e0, e1)['weight']
+
+        #remove then recursive
+        currG.remove_edge(e[0], e[1])
+        if currG.degree(e[1]) == 0:
+            currG.remove_node(e[1])
+        if currG.degree(e[0]) == 0:
+            currG.remove_node(e[0])
+        small_graph_bruteforce_recursive(G, currG, costPQ) #recursive call
+
+        #re-add what I just removed
+        if e0 not in currG.nodes:
+            currG.add_node(e0)
+        if e1 not in currG.nodes:
+            currG.add_node(e1)
+        currG.add_edge(e0, e1, weight=w)
+
+
+
+
+#for small graphs only! Should find the solution indefinitely
+def maes_second_dumbass_brute_force(G):
+    pqcost = []
+    small_graph_bruteforce_recursive(G, G, pqcost)
+    return heappop(pqcost)[1]
+
+    
+
+
+
+
+    # while pq:
+    #     if (T.number_of_nodes() == 2):
+    #         break
+    #     node = heappop(pq)
+    #     e = node[1]
+    #     # print(e)
+    #     w = node[0] * -1
+    #     T.remove_edge(e[0], e[1])
+    #     if T.degree(e[1]) == 0:
+    #         T.remove_node(e[1])
+    #     if T.degree(e[0]) == 0:
+    #         T.remove_node(e[0])
+    #     if nx.is_connected(T) and nx.is_dominating_set(G, T):
+    #         if nx.is_tree(T):
+    #             heappush(costpq, (average_pairwise_distance_fast(T), T))
+    #             # cost = average_pairwise_distance_fast(T)
+    #     else:
+    #         T.add_edge(e[0], e[1], weight=w)
+    # result = heappop(costpq)[1]
+    # brute_force = maes_dumbass_brute_force(G)
+
+
+
+
+
+
+
 
 
 
@@ -185,6 +232,18 @@ def makeAllOutputFiles():
             G = read_input_file(input_path)
             T = solve(G)
             assert is_valid_network(G, T)
+
+            #use brute force for small graphs
+            if file.startswith("small") and len(T) > 2:
+                print("Trying brute forcing on SMALL file: " + os.path.join("inputs", file)) #input file
+                BRUTE_TREE = maes_second_dumbass_brute_force(G)
+                if average_pairwise_distance_fast(BRUTE_TREE) <= average_pairwise_distance_fast(T):
+                    print("Small brute-force alg WINS.")
+                    T = BRUTE_TREE
+                else:
+                    print("Solver alg WINS.")
+                    #nothing happens
+
             #print("Average pairwise distance: {}".format(average_pairwise_distance_fast(T)))
             outname = os.path.splitext(file)[0]+'.out'
             output_path = os.path.join("outputs", outname)
@@ -200,12 +259,14 @@ def validateAllFiles():
         
 
 
-makeAllOutputFiles()
-# gr = read_input_file('inputs/small-254.in')
-# s = solve(gr)
-# print(average_pairwise_distance_fast(s))
-# write_output_file(s, 'outputs/small-254.out')
-# print(is_valid_network(gr,s))
+#makeAllOutputFiles()
+
+
+gr = read_input_file('inputs/small-6.in')
+s = maes_second_dumbass_brute_force(gr)
+print(average_pairwise_distance_fast(s))
+#write_output_file(s, 'outputs/small-6.out')
+print(is_valid_network(gr,s))
 
         
     # print(list(G.edges))

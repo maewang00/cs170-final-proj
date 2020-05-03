@@ -255,74 +255,56 @@ def maes_second_dumb_brute_force(G):
     small_graph_bruteforce_recursive(G, G, pqcost)
     return heappop(pqcost)[1]
 
-#G is original graph, T is the tree from what we found from our first algorithm
-def maes_randomization_alg(G, T):
-    pq = [] #min heap for Kruskals edge popping
-    for e in G.edges:
-        heappush(pq, (-G.edges[e]['weight'], e))
-    T = copy.deepcopy(G)
-    costpq = [] #min heap with minimal pairwise distance with its tree
 
-    MST = nx.minimum_spanning_tree(G)
-    MST_copy = copy.deepcopy(MST)
-    for n in MST_copy.nodes:
-        if MST_copy.degree(n) == 1:
-            MST.remove_node(n)
+#G is original graph, T is the tree from what we found from our first algorithm, 
+#iterations is how many times to randomly find a tree
+def maes_randomization_alg(G, T, iterations):
+    #min heap with minimal pairwise distance for ALL random trees
+    costpq = []
+    costs = []
 
-    campos_mst = campos_algorithm(G)
-    campos_copy = copy.deepcopy(campos_mst)
-    for n in campos_copy.nodes:
-        if campos_copy.degree(n) == 1:
-            campos_mst.remove_node(n)
+    for iter in range(iterations):
+        #edges in the tree so far
+        delete_edges = list(T.edges)
+        #how many edges to delete from the start tree initially
+        delete_num_edges = random.randint(1, len(delete_edges) - 5)
 
-    bftree = maes_dumb_brute_force(G)
-    
-    while pq:
-        if (T.number_of_nodes() == 2):
-            break
-        node = heappop(pq)
-        e = node[1]
-        # print(e)
-        w = node[0] * -1
-        T.remove_edge(e[0], e[1])
-        if T.degree(e[1]) == 0:
-            T.remove_node(e[1])
-        if T.degree(e[0]) == 0:
-            T.remove_node(e[0])
-        if nx.is_connected(T) and nx.is_dominating_set(G, T):
-            if nx.is_tree(T):
-                heappush(costpq, (average_pairwise_distance_fast(T), T))
-                # cost = average_pairwise_distance_fast(T)
-        else:
-            T.add_edge(e[0], e[1], weight=w)
+        modTree = copy.deepcopy(G)
 
-    result = heappop(costpq)[1]
-    #brute_force = maes_dumb_brute_force(G)
+        #delete "delete_num_edges" VALID edges in total
+        # for i in range(0, delete_num_edges):
+        while (delete_num_edges > 0):
+            chosen_edge = random.choice(delete_edges)
+            w = modTree.get_edge_data(chosen_edge[0], chosen_edge[1])['weight']
+            # e0 = chosen_edge[0]
+            # e1 = chosen_edge[1]
+            modTree.remove_edge(chosen_edge[0], chosen_edge[1])
+            if modTree.degree(chosen_edge[1]) == 0:
+                modTree.remove_node(chosen_edge[1])
+            if modTree.degree(chosen_edge[0]) == 0:
+                modTree.remove_node(chosen_edge[0])
+            delete_edges.pop(chosen_edge)
 
-    if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
-        if average_pairwise_distance_fast(campos_mst) <= average_pairwise_distance_fast(result):
-            if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(campos_mst):
-                print("BRUTEFORCE")
-                return bftree
+            if nx.is_connected(modTree) and nx.is_dominating_set(G, modTree):
+                #valid edge
+                delete_num_edges -= 1
             else:
-                print("CAMPOS") 
-                return campos_mst
-        else: 
-            print("ORIGIN ALG") 
-            return result
-    else:
-        print("MST")
-        return MST
+                #invalid edge,re-add what I just removed
+                if chosen_edge[0] not in modTree.nodes:
+                    modTree.add_node(chosen_edge[0])
+                if chosen_edge[1] not in modTree.nodes:
+                    modTree.add_node(chosen_edge[1])
+                modTree.add_edge(chosen_edge[0], chosen_edge[1], weight=w)
 
+        randTree = solve(modTree)
+
+
+        cost = average_pairwise_distance_fast(randTree)
+        if cost not in costs:
+            costs.append(cost)
+            heappush(costPQ, (cost, randTree))
     
-
-
-
-
-
-
-
-
+    return heappop(costPQ)[1]
 
 
 
@@ -347,7 +329,7 @@ def makeAllOutputFiles():
             #randomization optimization
             if len(T) > 2:
                 print("Trying randomization to find better result..")
-                betterT = maes_randomization_alg(G, T)
+                betterT = maes_randomization_alg(G, T, 100) #100 iterations of randomness
                 assert is_valid_network(G, betterT)
 
                 if average_pairwise_distance_fast(BRUTE_TREE) <= average_pairwise_distance_fast(T):

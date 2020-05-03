@@ -7,6 +7,8 @@ import heapq
 import copy
 import random
 import os
+import networkx.algorithms.isomorphism as iso
+
 def solve(G):
     """
     Args:
@@ -260,7 +262,7 @@ def maes_second_dumb_brute_force(G):
 #iterations is how many times to randomly find a tree
 def maes_randomization_alg(G, T, iterations):
     #min heap with minimal pairwise distance for ALL random trees
-    costpq = []
+    costPQ = []
     costs = []
 
     for iter in range(iterations):
@@ -268,42 +270,40 @@ def maes_randomization_alg(G, T, iterations):
         delete_edges = list(T.edges)
         #how many edges to delete from the start tree initially
         delete_num_edges = random.randint(1, len(delete_edges) - 5)
-
-        modTree = copy.deepcopy(G)
+        MODgraph = copy.deepcopy(G)
 
         #delete "delete_num_edges" VALID edges in total
         # for i in range(0, delete_num_edges):
-        while (delete_num_edges > 0):
-            chosen_edge = random.choice(delete_edges)
-            w = modTree.get_edge_data(chosen_edge[0], chosen_edge[1])['weight']
+        while (delete_num_edges > 0 and len(delete_edges) != 0):
+            chosen_edge = random.choice(delete_edges) 
+            w = MODgraph.get_edge_data(chosen_edge[0], chosen_edge[1])['weight']
             # e0 = chosen_edge[0]
             # e1 = chosen_edge[1]
-            modTree.remove_edge(chosen_edge[0], chosen_edge[1])
-            if modTree.degree(chosen_edge[1]) == 0:
-                modTree.remove_node(chosen_edge[1])
-            if modTree.degree(chosen_edge[0]) == 0:
-                modTree.remove_node(chosen_edge[0])
-            delete_edges.pop(chosen_edge)
+            MODgraph.remove_edge(chosen_edge[0], chosen_edge[1])
+            if MODgraph.degree(chosen_edge[1]) == 0:
+                MODgraph.remove_node(chosen_edge[1])
+            if MODgraph.degree(chosen_edge[0]) == 0:
+                MODgraph.remove_node(chosen_edge[0])
+            delete_edges.remove(chosen_edge)
 
-            if nx.is_connected(modTree) and nx.is_dominating_set(G, modTree):
-                #valid edge
-                delete_num_edges -= 1
-            else:
+            if not (nx.is_connected(MODgraph) and nx.is_dominating_set(G, MODgraph)):
                 #invalid edge,re-add what I just removed
-                if chosen_edge[0] not in modTree.nodes:
-                    modTree.add_node(chosen_edge[0])
-                if chosen_edge[1] not in modTree.nodes:
-                    modTree.add_node(chosen_edge[1])
-                modTree.add_edge(chosen_edge[0], chosen_edge[1], weight=w)
+                if chosen_edge[0] not in MODgraph.nodes:
+                    MODgraph.add_node(chosen_edge[0])
+                if chosen_edge[1] not in MODgraph.nodes:
+                    MODgraph.add_node(chosen_edge[1])
+                MODgraph.add_edge(chosen_edge[0], chosen_edge[1], weight=w)
 
-        randTree = solve(modTree)
-
-
-        cost = average_pairwise_distance_fast(randTree)
-        if cost not in costs:
-            costs.append(cost)
-            heappush(costPQ, (cost, randTree))
+        #save time to see if NO edges from T can be removed
+        if (not nx.is_isomorphic(G, MODgraph)):
+            randTree = solve(MODgraph)
+            cost = average_pairwise_distance_fast(randTree)
+            if cost not in costs:
+                costs.append(cost)
+                heappush(costPQ, (cost, randTree))
     
+    if len(costPQ) == 0:
+        heappush(costPQ, (average_pairwise_distance_fast(T), T))
     return heappop(costPQ)[1]
 
 
@@ -329,10 +329,10 @@ def makeAllOutputFiles():
             #randomization optimization
             if len(T) > 2:
                 print("Trying randomization to find better result..")
-                betterT = maes_randomization_alg(G, T, 100) #100 iterations of randomness
+                betterT = maes_randomization_alg(G, T, 50) #100 iterations of randomness
                 assert is_valid_network(G, betterT)
 
-                if average_pairwise_distance_fast(BRUTE_TREE) <= average_pairwise_distance_fast(T):
+                if average_pairwise_distance_fast(betterT) <= average_pairwise_distance_fast(T):
                     print("BETTER TREE FOUND.")
                     T = betterT
                 else:
@@ -346,7 +346,7 @@ def makeAllOutputFiles():
             outname = os.path.splitext(file)[0]+'.out'
             output_path = os.path.join("outputs", outname)
             print(output_path + "\n")
-            write_output_file(T, output_path)
+            #write_output_file(T, output_path)
             assert validate_file(output_path) == True
 
 def validateAllFiles():

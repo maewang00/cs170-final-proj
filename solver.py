@@ -97,11 +97,82 @@ def solve(G):
     #             _T.add_edge(e[0], e[1], weight=w)
     #     iterations -= 1
     result = heappop(costpq)[1]
+    brute_force = maes_dumbass_brute_force(G)
+
     if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
-        return result
+        if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(brute_force):
+            print("original alg WINS.")
+            return result
+        else:
+            print("brute force alg WINS.")
+            return brute_force
     else:
-        return MST
+        if average_pairwise_distance_fast(MST) <= average_pairwise_distance_fast(brute_force):
+            print("MST WINS.")
+            return MST
+        else:
+            print("brute force alg WINS.")
+            return brute_force
     
+
+def maes_dumbass_brute_force(G): #;( uses dijkstra's
+    #min heap with minimal pairwise distance with its tree
+    costpq = []
+    #list to keep track of all costs found so far
+    mincosts = []
+    #for all vertices in the graph, make it a source node for dijkstra's
+    for source_node in range(0, G.number_of_nodes()):
+        shortest_path = nx.shortest_path(G, source = source_node)
+        #convert shortest path dictionary into a tree and put into the min heap
+        Temp_Tree = nx.Graph()
+        edge_list = []
+        #iterate through the entire dictionary where: 
+        #key is target node from the dummy node
+        #value is list where index 0 is the dummy node and the last is the key (target node)
+        for key, list_path in shortest_path.items():
+            if (len(list_path) > 1):
+                for i in range(0, len(list_path) - 1):
+                    edge_weight = G.get_edge_data(list_path[i], list_path[i+1])['weight']
+                    edge = (list_path[i], list_path[i+1], edge_weight)
+                    #edge doesn't exist yet in the graph
+                    if (edge not in edge_list):
+                        edge_list.append(edge)
+        Temp_Tree.add_weighted_edges_from(edge_list)
+
+        #trim down the tree
+        tree_copy = copy.deepcopy(Temp_Tree)
+        for node in tree_copy.nodes:
+            if tree_copy.degree(node) == 1 or tree_copy.degree(node) == 0:
+                Temp_Tree.remove_node(node)
+
+        curr_cost = average_pairwise_distance_fast(Temp_Tree)
+        if curr_cost not in mincosts:
+            heappush(costpq, (curr_cost, Temp_Tree))
+            mincosts.append(curr_cost)
+
+    return heappop(costpq)[1]
+
+
+
+
+
+
+  #T = copy.deepcopy(G)
+  # original_vertices = G.number_of_nodes()
+  #make dummy node and connect to all other vertices with edge weights 0
+  # T.add_node(original_vertices)
+  # dummy_node_id = G.number_of_nodes()
+  # for node in range(0, original_vertices):
+  #     T.add_weighted_edges_from([(G.number_of_nodes(),node,0)])
+  #dictionary where: 
+  #key is target node from the dummy node
+  #value is list where index 0 is the dummy node and the last is the key (target node)
+  # shortest_path = nx.shortest_path(T, source = dummy_node_id)
+  #trim down leaf nodes form the shortest path tree
+  
+
+
+
 
 def is_spanning(G, node):
     return (G.degree(node) >= (G.number_of_nodes() - 1))
@@ -114,12 +185,12 @@ def makeAllOutputFiles():
             G = read_input_file(input_path)
             T = solve(G)
             assert is_valid_network(G, T)
-            # print("Average pairwise distance: {}".format(average_pairwise_distance_fast(T)))
+            #print("Average pairwise distance: {}".format(average_pairwise_distance_fast(T)))
             outname = os.path.splitext(file)[0]+'.out'
             output_path = os.path.join("outputs", outname)
             print(output_path + "\n")
             write_output_file(T, output_path)
-
+            assert validate_file(output_path) == True;
 
 def validateAllFiles():
     for file in os.listdir("outputs"):
@@ -130,7 +201,6 @@ def validateAllFiles():
 
 
 makeAllOutputFiles()
-validateAllFiles()
 # gr = read_input_file('inputs/small-254.in')
 # s = solve(gr)
 # print(average_pairwise_distance_fast(s))

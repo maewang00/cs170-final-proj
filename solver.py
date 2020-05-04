@@ -54,11 +54,11 @@ def solve(G):
         if MST_copy.degree(n) == 1:
             MST.remove_node(n)
 
-    # campos_mst = campos_algorithm(G)
-    # campos_copy = copy.deepcopy(campos_mst)
-    # for n in campos_copy.nodes:
-    #     if campos_copy.degree(n) == 1:
-    #         campos_mst.remove_node(n)
+    campos_mst = campos_algorithm(G)
+    campos_copy = copy.deepcopy(campos_mst)
+    for n in campos_copy.nodes:
+        if campos_copy.degree(n) == 1:
+            campos_mst.remove_node(n)
 
     bftree = maes_dumb_brute_force(G)
     
@@ -84,31 +84,31 @@ def solve(G):
     result = heappop(costpq)[1]
     #brute_force = maes_dumb_brute_force(G)
 
-    if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
-        if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(result):
-            print("BRUTEFORCE")
-            return bftree
-        else:
-            print("ORIGIN ALG")
-            return result
-    else:
-        print("MST")
-        return MST
-
     # if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
-    #     if average_pairwise_distance_fast(campos_mst) <= average_pairwise_distance_fast(result):
-    #         if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(campos_mst):
-    #             print("BRUTEFORCE")
-    #             return bftree
-    #         else:
-    #             print("CAMPOS") 
-    #             return campos_mst
-    #     else: 
-    #         print("ORIGIN ALG") 
+    #     if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(result):
+    #         print("BRUTEFORCE")
+    #         return bftree
+    #     else:
+    #         print("ORIGIN ALG")
     #         return result
     # else:
     #     print("MST")
     #     return MST
+
+    if average_pairwise_distance_fast(result) <= average_pairwise_distance_fast(MST):
+        if average_pairwise_distance_fast(campos_mst) <= average_pairwise_distance_fast(result):
+            if average_pairwise_distance_fast(bftree) < average_pairwise_distance_fast(campos_mst):
+                print("BRUTEFORCE")
+                return bftree
+            else:
+                print("CAMPOS") 
+                return campos_mst
+        else: 
+            print("ORIGIN ALG") 
+            return result
+    else:
+        print("MST")
+        return MST
 
 def maes_dumb_brute_force(G): #;( uses dijkstra's
     #min heap with minimal pairwise distance with its tree
@@ -307,7 +307,7 @@ def maes_randomization_alg(G, T, iterations):
 
         #save time to see if NO edges from T can be removed
         if (not nx.is_isomorphic(G, MODgraph)):
-            randTree = solve(MODgraph)
+            randTree = solve2(MODgraph)
             cost = average_pairwise_distance_fast(randTree)
             if cost not in costs:
                 costs.append(cost)
@@ -320,7 +320,40 @@ def maes_randomization_alg(G, T, iterations):
 
 
 
+def solve2(G):
+    """
+    Args:
+        G: networkx.Graph
 
+    Returns:
+        T: networkx.Graph
+    """
+    pq = [] #min heap for Kruskals edge popping
+    for e in G.edges:
+        heappush(pq, (-G.edges[e]['weight'], e))
+    T = copy.deepcopy(G)
+    costpq = [] #min heap with minimal pairwise distance with its tree
+
+    while pq:
+        if (T.number_of_nodes() == 2):
+            break
+        node = heappop(pq)
+        e = node[1]
+        # print(e)
+        w = node[0] * -1
+        T.remove_edge(e[0], e[1])
+        if T.degree(e[1]) == 0:
+            T.remove_node(e[1])
+        if T.degree(e[0]) == 0:
+            T.remove_node(e[0])
+        if nx.is_connected(T) and nx.is_dominating_set(G, T):
+            if nx.is_tree(T):
+                heappush(costpq, (average_pairwise_distance_fast(T), T))
+                # cost = average_pairwise_distance_fast(T)
+        else:
+            T.add_edge(e[0], e[1], weight=w)
+
+    return heappop(costpq)[1]
 
 
 
@@ -340,7 +373,7 @@ def makeAllOutputFiles():
             #randomization optimization
             if len(T) > 2:
                 print("Trying randomization to find better result..")
-                betterT = maes_randomization_alg(G, T, 50) #100 iterations of randomness
+                betterT = maes_randomization_alg(G, T, 50) #50 iterations of randomness
                 assert is_valid_network(G, betterT)
 
                 if average_pairwise_distance_fast(betterT) < average_pairwise_distance_fast(T):

@@ -280,21 +280,20 @@ def maes_randomization_alg(G, T, iterations):
         #edges in the tree so far
         delete_edges = list(T.edges)
         #how many edges to delete from the start tree initially
-        delete_num_edges = random.randint(1, len(delete_edges) - 5)
+        delete_num_edges = random.randint(1, len(delete_edges))
         MODgraph = copy.deepcopy(G)
 
         #delete "delete_num_edges" VALID edges in total
-        # for i in range(0, delete_num_edges):
         while (delete_num_edges > 0 and len(delete_edges) != 0):
             chosen_edge = random.choice(delete_edges) 
             w = MODgraph.get_edge_data(chosen_edge[0], chosen_edge[1])['weight']
             # e0 = chosen_edge[0]
             # e1 = chosen_edge[1]
             MODgraph.remove_edge(chosen_edge[0], chosen_edge[1])
-            if MODgraph.degree(chosen_edge[1]) == 0:
-                MODgraph.remove_node(chosen_edge[1])
-            if MODgraph.degree(chosen_edge[0]) == 0:
-                MODgraph.remove_node(chosen_edge[0])
+            # if MODgraph.degree(chosen_edge[1]) == 0:
+            #     MODgraph.remove_node(chosen_edge[1])
+            # if MODgraph.degree(chosen_edge[0]) == 0:
+            #     MODgraph.remove_node(chosen_edge[0])
             delete_edges.remove(chosen_edge)
 
             if not (nx.is_connected(MODgraph) and nx.is_dominating_set(G, MODgraph)):
@@ -304,7 +303,9 @@ def maes_randomization_alg(G, T, iterations):
                 if chosen_edge[1] not in MODgraph.nodes:
                     MODgraph.add_node(chosen_edge[1])
                 MODgraph.add_edge(chosen_edge[0], chosen_edge[1], weight=w)
-
+            else:
+                #found a valid edge
+                delete_num_edges -= 1
         #save time to see if NO edges from T can be removed
         if (not nx.is_isomorphic(G, MODgraph)):
             randTree = solve2(MODgraph)
@@ -367,13 +368,21 @@ def makeAllOutputFiles():
             print(os.path.join("inputs", file)) #input file
             input_path = os.path.join("inputs", file)
             G = read_input_file(input_path)
-            T = solve(G)
+            try:
+                T = solve(G)
+            except:
+                print("ERRORED OUT. CONTINUE ANYWAY")
+                T = G
             assert is_valid_network(G, T)
 
             #randomization optimization
             if len(T) > 2:
                 print("Trying randomization to find better result..")
-                betterT = maes_randomization_alg(G, T, 50) #50 iterations of randomness
+                try:
+                    betterT = maes_randomization_alg(G, T, 100) #50 iterations of randomness
+                except:
+                    print("ERRORED OUT. CONTINUE ANYWAY")
+                    betterT = G
                 assert is_valid_network(G, betterT)
 
                 if average_pairwise_distance_fast(betterT) < average_pairwise_distance_fast(T):
@@ -399,7 +408,6 @@ def validateAllFiles():
         if (validate_file(output_path) == False):
             print(output_path + " INVALIDATED.")
         
-
 
 makeAllOutputFiles()
 
